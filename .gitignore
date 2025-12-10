@@ -1,0 +1,41 @@
+# Node
+node_modules/
+
+# Package manager lockfiles
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Builds
+backend/dist/
+frontend/dist/
+backend/build/
+frontend/build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Env files
+.env
+backend/.env
+frontend/.env
+
+# Uploads (CTF files)
+backend/uploads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
