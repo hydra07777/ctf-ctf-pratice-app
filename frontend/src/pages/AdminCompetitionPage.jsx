@@ -3,17 +3,34 @@ import { api } from '../api/client.js';
 
 export function AdminCompetitionPage() {
   const [competitions, setCompetitions] = useState([]);
+  const [challenges, setChallenges] = useState([]);
+  const [selectedCompetitionId, setSelectedCompetitionId] = useState('');
+  const [selectedCtfIds, setSelectedCtfIds] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(60);
 
   const loadCompetitions = async () => {
-    // simple: fetch all competitions via GET /competitions (not implemented),
-    // so for now we only allow creation and assume IDs connues.
+    try {
+      const res = await api.get('/competitions');
+      setCompetitions(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const loadChallenges = async () => {
+    try {
+      const res = await api.get('/challenges');
+      setChallenges(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
     loadCompetitions();
+    loadChallenges();
   }, []);
 
   const handleCreate = async (e) => {
@@ -23,6 +40,7 @@ export function AdminCompetitionPage() {
       setTitle('');
       setDescription('');
       alert('Compétition créée');
+      loadCompetitions();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Erreur de création');
@@ -36,6 +54,28 @@ export function AdminCompetitionPage() {
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Erreur de démarrage');
+    }
+  };
+
+  const toggleCtfSelection = (id) => {
+    setSelectedCtfIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const handleAssignChallenges = async () => {
+    if (!selectedCompetitionId) {
+      alert('Sélectionne d\'abord une compétition');
+      return;
+    }
+    try {
+      await api.put(`/competitions/${selectedCompetitionId}/challenges`, {
+        ctfIds: selectedCtfIds,
+      });
+      alert('CTF associés à la compétition');
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Erreur lors de l\'association des CTF');
     }
   };
 
@@ -102,6 +142,61 @@ export function AdminCompetitionPage() {
             Démarrer
           </button>
         </div>
+      </div>
+
+      <div className="rounded border border-slate-800 bg-slate-900/70 p-5">
+        <h2 className="mb-3 text-lg font-semibold">Gérer les compétitions existantes</h2>
+        <div className="mb-4 space-y-2 text-sm">
+          <label className="block">Sélectionner une compétition</label>
+          <select
+            value={selectedCompetitionId}
+            onChange={(e) => setSelectedCompetitionId(e.target.value)}
+            className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-cyan-400"
+          >
+            <option value="">-- Choisir --</option>
+            {competitions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title} (status: {c.status})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-3 text-sm text-slate-300">
+          Sélectionne les CTF (défis) à inclure dans cette compétition.
+        </div>
+
+        <div className="max-h-64 space-y-2 overflow-y-auto text-sm">
+          {challenges.map((c) => (
+            <label
+              key={c.id}
+              className="flex cursor-pointer items-center justify-between rounded border border-slate-800 bg-slate-950/70 px-3 py-2"
+            >
+              <div>
+                <div className="font-semibold">{c.title}</div>
+                <div className="text-xs text-slate-300">{c.description}</div>
+              </div>
+              <input
+                type="checkbox"
+                checked={selectedCtfIds.includes(c.id)}
+                onChange={() => toggleCtfSelection(c.id)}
+              />
+            </label>
+          ))}
+          {challenges.length === 0 && (
+            <p className="text-sm text-slate-300">
+              Aucun CTF disponible pour le moment.
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAssignChallenges}
+          className="mt-4 rounded bg-cyan-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-cyan-400"
+        >
+          Associer les CTF sélectionnés
+        </button>
       </div>
     </div>
   );

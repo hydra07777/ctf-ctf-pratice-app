@@ -1,8 +1,40 @@
 const express = require('express');
-const { Competition, Score } = require('../models');
+const { Competition, Score, CTFChallenge } = require('../models');
 const { authRequired, requireRole } = require('../middleware/auth.middleware');
 
 const router = express.Router();
+
+// List competitions (all roles, but requires auth)
+router.get('/', authRequired, async (req, res) => {
+    try {
+        const where = {};
+
+        // Optionnel : pour les participants, on peut filtrer seulement PLANNED / RUNNING
+        // Ici on renvoie tout, la logique de filtrage peut se faire côté frontend si besoin.
+
+        const competitions = await Competition.findAll({ where, order: [['createdAt', 'DESC']] });
+        return res.json(competitions);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// List competitions (all roles, but requires auth)
+router.get('/competitions', authRequired, async (req, res) => {
+    try {
+        const where = {};
+
+        // Optionnel : pour les participants, on peut filtrer seulement PLANNED / RUNNING
+        // Ici on renvoie tout, la logique de filtrage peut se faire côté frontend si besoin.
+
+        const competitions = await Competition.findAll({ where, order: [['createdAt', 'DESC']] });
+        return res.json(competitions);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 // Create competition (admin general)
 router.post('/', authRequired, requireRole('ADMIN_GENERAL'), async (req, res) => {
@@ -95,6 +127,37 @@ router.post('/:id/finish', authRequired, requireRole('ADMIN_GENERAL'), async (re
         });
 
         return res.json(competition);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// Attach existing CTF challenges to a competition (admin general)
+router.put('/:id/challenges', authRequired, requireRole('ADMIN_GENERAL'), async (req, res) => {
+    try {
+        const competitionId = req.params.id;
+        const { ctfIds } = req.body;
+
+        if (!Array.isArray(ctfIds)) {
+            return res.status(400).json({ message: 'ctfIds must be an array of challenge IDs' });
+        }
+
+        const competition = await Competition.findByPk(competitionId);
+        if (!competition) {
+            return res.status(404).json({ message: 'Competition not found' });
+        }
+
+        await CTFChallenge.update(
+            { competitionId: competition.id },
+            {
+                where: {
+                    id: ctfIds,
+                },
+            },
+        );
+
+        return res.json({ message: 'Challenges updated for competition', competitionId, ctfIds });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });

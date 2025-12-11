@@ -7,6 +7,7 @@ import { RegisterPage } from './pages/RegisterPage.jsx';
 import { UploadCTFPage } from './pages/UploadCTFPage.jsx';
 import { CompetitionPage } from './pages/CompetitionPage.jsx';
 import { AdminCompetitionPage } from './pages/AdminCompetitionPage.jsx';
+import { CompetitionsListPage } from './pages/CompetitionsListPage.jsx';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="/upload" element={<UploadCTFPage />} />
+              <Route path="/competitions" element={<CompetitionsListPage />} />
               <Route path="/competitions/:id" element={<CompetitionPage />} />
             </Route>
 
